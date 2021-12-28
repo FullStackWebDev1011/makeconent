@@ -1,0 +1,18 @@
+.v-center {
+    display: flex;
+    align-items: center;
+}
+.tag-status {
+    text-transform: capitalize;
+}
+
+li.disabled {
+    cursor: not-allowed;
+}
+li.disabled a{
+    pointer-events: none!important;
+}
+img.flag-icon {
+    width: 19px;
+    background-color: black
+}
