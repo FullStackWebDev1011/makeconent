@@ -5,6 +5,7 @@
     }
 </style>
 <?php
+$totalAmount = 0;
 $stripe = new \Stripe\StripeClient('sk_test_51IhvShAl7ip8OlX9PVZke4Rg7kbLcSXwvZrcCPAbgbcfoETLRqSJbZr12hAFJKQX9hwiE40xkbeBOhnSQDV2twFc00nOsibsKH');
 $intent = $stripe->paymentIntents->create(
     [
@@ -36,18 +37,18 @@ $intent = $stripe->paymentIntents->create(
                         <div class="col-md-6 row">
                             <label for="deposit_amount" class="col-sm-5 col-form-label">Deposit Amount</label>
                             <div class="col-md-7">
-                                <input type="number" class="form-control text-right" id="deposit_amount">
+                                <input type="number" class="form-control text-right" id="deposit_amount" onInput="depositAmountChanged()">
                             </div>
                             <div class="col-md-5">Processing Fee</div>
                             <div class="col-md-7 text-right">
-                                <span>$15.00</span>
+                                <span id="depositFee">$00.00</span>
                             </div>
                             <div class="col-md-5 font-weight-bold">Total</div>
                             <div class="col-md-7 text-right">
-                                <span>$45.00</span>
+                                <span id="totalDeposit">$00.00</span>
                             </div>
                             <div class="col-md-12">
-                                <button class="btn btn-primary w-100">Confirm and pay $45.00 USD</button>
+                                <button class="btn btn-primary w-100">Confirm and pay <span id="btnSpan">0</span> USD</button>
                             </div>
                         </div>
                     </div>
@@ -61,15 +62,29 @@ $intent = $stripe->paymentIntents->create(
     </form>
 </div>
 <script src="https://js.stripe.com/v3/"></script>
+
 <script>
-var stripe = Stripe('{{ env('STRIPE_KEY') }}');
+    var stripe = Stripe('{{ env('STRIPE_KEY') }}');
+    const options = {
+        clientSecret: '<?= $intent->client_secret ?>',
+    };
 
-const options = {
-    clientSecret: '<?= $intent->client_secret ?>',
-};
+    var elements = stripe.elements(options);
+    const paymentElement = elements.create('payment');
+    paymentElement.mount('#payment-element');
 
-var elements = stripe.elements(options);
+    function depositAmountChanged() {
+        var inputDepositAmount = document.getElementById("deposit_amount");
+        var spanFee = document.getElementById("depositFee");
+        var spanTotalDeposit = document.getElementById("totalDeposit");
+        var btnTotalSpan = document.getElementById("btnSpan");
 
-const paymentElement = elements.create('payment');
-paymentElement.mount('#payment-element');
+        var depositAmount = (isNaN(inputDepositAmount.value) ? 0 : inputDepositAmount.value);
+        var depositFee = (depositAmount == 0) ? 0 : (depositAmount * 2.9) / 100 + 0.3;
+        var totalDeposit = parseFloat(depositAmount) + parseFloat(depositFee);
+        if (isNaN(totalDeposit)) totalDeposit = 0.0;
+        spanFee.innerText = '$' + depositFee.toFixed(2);
+        spanTotalDeposit.innerText = '$' + totalDeposit.toFixed(2);
+        btnTotalSpan.innerText = totalDeposit.toFixed(2);
+    }
 </script>
